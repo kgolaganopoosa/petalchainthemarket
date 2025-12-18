@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Petal Chain - The Market</title>
-    
-    <link rel="icon" type="image/png" href="https://via.placeholder.com/192/000000/FFFFFF?text=PC">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF?text=PC">
-    <meta name="theme-color" content="#000000">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -16,47 +11,36 @@
         body { font-family: 'Inter', sans-serif; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         select { border-radius: 0; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; }
-        .sale-badge { 
-            position: absolute; top: 0; left: 0; 
-            background: #FF0000; color: white; 
-            padding: 4px 8px; font-weight: 900; 
-            font-size: 10px; letter-spacing: 1px;
-            z-index: 10;
-        }
+        
+        /* Animation for notification */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
+        .toast-exit { transform: translateY(0); opacity: 1; }
+        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
     </style>
 </head>
-<body class="bg-white text-black min-h-screen flex flex-col" x-data="marketStore()" x-init="init()" x-cloak>
-
-    <div x-show="showInstallPrompt" class="fixed top-20 left-4 right-4 z-[200] bg-black text-white p-5 border-2 border-white shadow-2xl" x-transition>
-        <div class="flex justify-between items-start">
-            <div class="flex gap-3">
-                <div class="w-10 h-10 bg-white text-black flex items-center justify-center font-black">PC</div>
-                <div>
-                    <p class="font-black text-sm uppercase italic">Install Market App</p>
-                    <p class="text-[10px] opacity-80 mt-1">Add to home screen for faster shopping.</p>
-                </div>
-            </div>
-            <button @click="showInstallPrompt = false" class="text-xl font-bold px-2">×</button>
-        </div>
-        <button @click="triggerInstall()" class="mt-4 w-full bg-white text-black py-3 text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition">
-            Install Now
-        </button>
-    </div>
+<body class="bg-white text-black min-h-screen flex flex-col" x-data="marketStore()" x-cloak>
 
     <nav class="border-b-2 border-black sticky top-0 bg-white z-50 p-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
             <div class="w-10 h-10 bg-black text-white flex items-center justify-center font-black rounded-sm italic border border-white">PC</div>
             <span class="font-black text-xl tracking-tighter uppercase">Petal Chain</span>
         </div>
-        <button @click="cartOpen = true" class="border-2 border-black px-4 py-1 font-bold hover:bg-black hover:text-white transition">
+        <button @click="cartOpen = true" class="border-2 border-black px-4 py-1 font-bold hover:bg-black hover:text-white transition flex items-center gap-2">
             CART [<span class="text-red-600" x-text="cart.length"></span>]
         </button>
     </nav>
 
+    <div class="py-10 border-b border-black text-center px-4 bg-white">
+        <h2 class="text-4xl font-black uppercase mb-1">The Market</h2>
+        <p class="text-xs tracking-[0.2em] font-bold uppercase text-gray-500 italic">Add items to the cart for instant delivery.</p>
+    </div>
+
     <div class="fixed bottom-10 left-0 right-0 z-[120] flex justify-center pointer-events-none">
         <template x-if="showToast">
-            <div x-transition class="bg-black text-white px-6 py-3 font-black uppercase text-xs border-2 border-white shadow-xl pointer-events-auto">
-                Added to cart
+            <div x-transition:enter="toast-enter-active" x-transition:leave="toast-exit-active" 
+                 class="bg-black text-white px-6 py-3 font-black uppercase text-xs tracking-widest border-2 border-white shadow-xl pointer-events-auto">
+                Item added to cart
             </div>
         </template>
     </div>
@@ -64,8 +48,9 @@
     <section class="p-4 border-b border-black space-y-4 sticky top-[74px] bg-white z-40">
         <input type="text" x-model="search" placeholder="SEARCH PRODUCTS..." 
                class="w-full border-2 border-black p-3 focus:outline-none placeholder-gray-400 font-bold uppercase text-sm">
-        <div class="flex gap-2">
-            <select x-model="filterStore" class="border-2 border-black p-2 text-[10px] font-black uppercase bg-white flex-1 pr-8">
+        
+        <div class="flex gap-2 overflow-x-auto">
+            <select x-model="filterStore" class="border-2 border-black p-2 text-[10px] font-black uppercase bg-white pr-8">
                 <option value="">ALL STORES</option>
                 <template x-for="s in Array.from(new Set(products.map(p => p.store)))">
                     <option :value="s" x-text="s"></option>
@@ -74,39 +59,36 @@
             <button @click="onlySales = !onlySales" 
                     :class="onlySales ? 'bg-black text-white' : 'bg-white text-black'"
                     class="border-2 border-black px-4 py-2 text-[10px] font-black uppercase">
-                ONLY SALES
+                ON DISCOUNT
             </button>
         </div>
     </section>
 
     <main class="p-4 grid-2 flex-grow">
         <template x-for="product in filteredProducts()" :key="product.id">
-            <div class="border-2 border-black flex flex-col p-2 bg-white relative">
-                <template x-if="product.discount">
-                    <div class="sale-badge uppercase">SAVE</div>
-                </template>
-
+            <div class="border-2 border-black flex flex-col p-2 bg-white">
                 <div class="relative cursor-pointer border-b border-black mb-2 overflow-hidden" @click="viewImage = product.image">
                     <img :src="product.image" class="w-full aspect-square object-cover transition duration-300 hover:scale-105">
+                    <template x-if="product.discount">
+                        <span class="absolute top-0 left-0 bg-black text-white text-[9px] px-2 py-1 font-bold uppercase">DISCOUNT</span>
+                    </template>
                 </div>
                 
                 <div class="flex-grow">
                     <p class="text-[9px] font-bold text-gray-400 uppercase" x-text="product.store"></p>
-                    <h3 class="font-black text-xs uppercase h-8 overflow-hidden leading-tight" x-text="product.name"></h3>
-                    <div class="flex items-center gap-2 mt-1">
-                        <p class="text-lg font-black" x-text="'R' + product.price"></p>
-                        <template x-if="product.discount">
-                             <p class="text-[10px] text-gray-400 line-through" x-text="'R' + (product.price + 10)"></p>
-                        </template>
-                    </div>
+                    <h3 class="font-black text-xs uppercase h-8 overflow-hidden" x-text="product.name"></h3>
+                    <p class="text-lg font-black mt-1" x-text="'R' + product.price"></p>
                 </div>
 
                 <div class="mt-3 space-y-2">
-                    <select x-model="product.orderQty" class="w-full border-2 border-black p-1 text-xs font-bold bg-white pr-6">
-                        <template x-for="n in 12">
-                            <option :value="n" x-text="'QTY: ' + n"></option>
-                        </template>
-                    </select>
+                    <div>
+                        <label class="text-[9px] font-black uppercase block mb-1">Quantity</label>
+                        <select x-model="product.orderQty" class="w-full border-2 border-black p-1 text-xs font-bold bg-white pr-6">
+                            <template x-for="n in 12">
+                                <option :value="n" x-text="n"></option>
+                            </template>
+                        </select>
+                    </div>
                     <button @click="addToCart(product)" class="w-full bg-black text-white py-2 text-[10px] font-black uppercase border border-black hover:bg-white hover:text-black transition">
                         ADD TO CART
                     </button>
@@ -118,30 +100,63 @@
     <div x-show="cartOpen" class="fixed inset-0 z-[100] bg-black bg-opacity-80 flex justify-end" x-transition>
         <div class="bg-white w-full max-w-md h-full p-6 flex flex-col shadow-2xl" @click.away="cartOpen = false">
             <div class="flex justify-between items-center border-b-4 border-black pb-4">
-                <h2 class="text-2xl font-black uppercase">CHECKOUT</h2>
+                <h2 class="text-2xl font-black uppercase">YOUR CART</h2>
                 <button @click="cartOpen = false" class="text-4xl font-black leading-none">×</button>
             </div>
+
             <div class="flex-1 overflow-y-auto py-4">
+                <template x-if="cart.length === 0">
+                    <p class="text-center italic text-gray-500 py-10 uppercase text-xs font-bold">Your cart is empty.</p>
+                </template>
                 <template x-for="item in cart" :key="item.id">
-                    <div class="flex justify-between items-center border-b border-gray-100 py-3">
-                        <div>
+                    <div class="flex justify-between items-center border-b border-gray-200 py-3">
+                        <div class="pr-4">
                             <p class="font-black uppercase text-sm" x-text="item.name"></p>
-                            <p class="text-[10px] font-bold text-gray-500" x-text="'Qty: ' + item.qty + ' | ' + item.store"></p>
+                            <p class="text-[10px] font-bold text-gray-600" x-text="'Qty: ' + item.qty + ' | ' + item.store"></p>
                         </div>
-                        <button @click="removeFromCart(item.id)" class="text-[9px] font-black underline uppercase">Remove</button>
+                        <div class="text-right">
+                            <p class="font-black text-sm" x-text="'R' + (item.price * item.qty)"></p>
+                            <button @click="removeFromCart(item.id)" class="text-[9px] font-black underline uppercase">Remove</button>
+                        </div>
                     </div>
                 </template>
             </div>
+
             <div class="border-t-4 border-black pt-4">
-                <div class="flex justify-between text-2xl font-black mb-4">
-                    <span>TOTAL</span><span x-text="'R' + (subtotal() + 3)"></span>
+                <div class="space-y-1 text-xs font-bold uppercase mb-4">
+                    <div class="flex justify-between"><span>Subtotal</span><span x-text="'R' + subtotal()"></span></div>
+                    <div class="flex justify-between"><span>Delivery</span><span>R3</span></div>
+                    <div class="flex justify-between text-2xl font-black border-t border-black pt-2 mt-2">
+                        <span>TOTAL</span><span x-text="'R' + (subtotal() + 3)"></span>
+                    </div>
                 </div>
-                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black">
-                    CONFIRM PURCHASE
+                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black hover:bg-white hover:text-black transition uppercase italic">
+                    CONFIRM PURCHASE VIA WHATSAPP
                 </button>
             </div>
         </div>
     </div>
+
+    <div x-show="viewImage" class="fixed inset-0 z-[110] bg-black bg-opacity-95 flex items-center justify-center p-4" @click="viewImage = null">
+        <img :src="viewImage" class="max-w-full max-h-full border-4 border-white shadow-2xl">
+    </div>
+
+    <footer class="bg-black text-white p-12 mt-auto border-t-4 border-black">
+        <div class="flex flex-col items-center gap-6 text-center">
+            <div class="w-12 h-12 border-2 border-white flex items-center justify-center text-xl font-black italic">PC</div>
+            <p class="font-black uppercase tracking-widest text-sm">Petal Chain - The Market</p>
+            <div class="grid grid-cols-2 gap-10 text-[10px] uppercase font-bold opacity-80">
+                <div class="space-y-2">
+                    <a href="#" class="block hover:underline">Privacy Policy</a>
+                    <a href="#" class="block hover:underline">Terms & Conditions</a>
+                </div>
+                <div class="space-y-2 text-right">
+                    <p>Email: market@petalchain.co.za</p>
+                    <p>WhatsApp: 0646575290</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         function marketStore() {
@@ -149,33 +164,17 @@
                 cartOpen: false,
                 viewImage: null,
                 showToast: false,
-                showInstallPrompt: false,
-                deferredPrompt: null,
                 search: '',
                 filterStore: '',
                 onlySales: false,
                 cart: [],
                 products: [
-                    { id: 1, name: "Sunflower Oil 2L", store: "Checkers", price: 75, discount: true, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500", orderQty: 1 },
-                    { id: 2, name: "White Bread Sliced", store: "Pick n Pay", price: 18, discount: false, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500", orderQty: 1 },
-                    { id: 3, name: "Fuji Apples 1.5kg", store: "Woolworths", price: 35, discount: true, image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=500", orderQty: 1 },
-                    { id: 4, name: "Large Eggs 18pk", store: "Checkers", price: 58, discount: false, image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=500", orderQty: 1 }
+                    { id: 1, name: "Sunflower Oil 2L", store: "Checkers", price: 75, discount: true, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500", orderQty: 1, link: "petalchain.co.za/p/oil" },
+                    { id: 2, name: "Sliced White Bread", store: "Pick n Pay", price: 18, discount: false, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500", orderQty: 1, link: "petalchain.co.za/p/bread" },
+                    { id: 3, name: "Fuji Apples 1.5kg", store: "Woolworths", price: 35, discount: true, image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=500", orderQty: 1, link: "petalchain.co.za/p/apples" },
+                    { id: 4, name: "Large Eggs 18pk", store: "Checkers", price: 58, discount: false, image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=500", orderQty: 1, link: "petalchain.co.za/p/eggs" },
+                    { id: 5, name: "Full Cream Milk 2L", store: "Spar", price: 39, discount: false, image: "https://images.unsplash.com/photo-1550583724-125581fe2f8a?w=500", orderQty: 1, link: "petalchain.co.za/p/milk" }
                 ],
-                init() {
-                    window.addEventListener('beforeinstallprompt', (e) => {
-                        e.preventDefault();
-                        this.deferredPrompt = e;
-                        this.showInstallPrompt = true;
-                    });
-                },
-                triggerInstall() {
-                    if (this.deferredPrompt) {
-                        this.deferredPrompt.prompt();
-                    } else {
-                        alert("For iPhone: Tap 'Share' then 'Add to Home Screen'");
-                    }
-                    this.showInstallPrompt = false;
-                },
                 filteredProducts() {
                     return this.products.filter(p => {
                         return p.name.toLowerCase().includes(this.search.toLowerCase()) &&
@@ -190,17 +189,47 @@
                     } else {
                         this.cart.push({ ...product, qty: parseInt(product.orderQty) });
                     }
+                    product.orderQty = 1;
+                    
+                    // Show Notification
                     this.showToast = true;
                     setTimeout(() => { this.showToast = false; }, 2000);
                 },
-                subtotal() { return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0); },
+                removeFromCart(id) {
+                    this.cart = this.cart.filter(i => i.id !== id);
+                },
+                subtotal() {
+                    return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                },
                 checkout() {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                        const message = `*PETAL CHAIN ORDER*%0A*Total: R${this.subtotal() + 3}*%0AMaps: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                        window.open(`https://wa.me/27646575290?text=${message}`, '_blank');
-                    }, () => {
-                        alert("Please enable GPS for delivery location.");
+                    if (this.cart.length === 0) return alert("Your cart is empty.");
+
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition((pos) => {
+                            this.sendWhatsApp(pos.coords.latitude, pos.coords.longitude);
+                        }, () => {
+                            alert("Location access denied.");
+                            this.sendWhatsApp("Not provided", "Not provided");
+                        });
+                    }
+                },
+                sendWhatsApp(lat, lon) {
+                    let message = `*PETAL CHAIN - THE MARKET ORDER*%0A%0A`;
+                    this.cart.forEach(i => {
+                        message += `• *${i.name}*%0A  Quantity: ${i.qty}%0A  Store: ${i.store}%0A  Price: R${i.price * i.qty}%0A  Link: ${i.link}%0A%0A`;
                     });
+                    
+                    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                    
+                    message += `*Subtotal:* R${this.subtotal()}%0A`;
+                    message += `*Delivery Fee:* R3%0A`;
+                    message += `*TOTAL:* R${this.subtotal() + 3}%0A%0A`;
+                    message += `*GPS LOCATION*%0A`;
+                    message += `Maps Link: ${mapsUrl}`;
+                    
+                    window.open(`https://wa.me/27646575290?text=${message}`, '_blank');
+                    this.cart = [];
+                    this.cartOpen = false;
                 }
             }
         }
