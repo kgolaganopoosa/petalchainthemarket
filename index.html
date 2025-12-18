@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Petal Chain - The Market</title>
+    
+    <link rel="icon" type="image/png" href="https://via.placeholder.com/192/000000/FFFFFF?text=PC">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192/000000/FFFFFF?text=PC">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
@@ -11,15 +15,20 @@
         body { font-family: 'Inter', sans-serif; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         select { border-radius: 0; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; }
-        
-        /* Animation for notification */
-        .toast-enter { transform: translateY(100%); opacity: 0; }
-        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
-        .toast-exit { transform: translateY(0); opacity: 1; }
-        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
     </style>
 </head>
-<body class="bg-white text-black min-h-screen flex flex-col" x-data="marketStore()" x-cloak>
+<body class="bg-white text-black min-h-screen flex flex-col" x-data="marketStore()" x-init="init()" x-cloak>
+
+    <div x-show="showInstallPrompt" class="fixed top-20 left-4 right-4 z-[200] bg-black text-white p-4 border-2 border-white shadow-2xl" x-transition>
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="font-black text-sm uppercase italic">Save to Home Screen</p>
+                <p class="text-[10px] opacity-80 mt-1">Access Petal Chain faster by adding it to your phone's home screen.</p>
+            </div>
+            <button @click="showInstallPrompt = false" class="text-xl font-bold px-2">&times;</button>
+        </div>
+        <button @click="showInstallPrompt = false" class="mt-3 w-full border border-white py-2 text-[10px] font-black uppercase">Got it</button>
+    </div>
 
     <nav class="border-b-2 border-black sticky top-0 bg-white z-50 p-4 flex justify-between items-center">
         <div class="flex items-center gap-2">
@@ -38,8 +47,7 @@
 
     <div class="fixed bottom-10 left-0 right-0 z-[120] flex justify-center pointer-events-none">
         <template x-if="showToast">
-            <div x-transition:enter="toast-enter-active" x-transition:leave="toast-exit-active" 
-                 class="bg-black text-white px-6 py-3 font-black uppercase text-xs tracking-widest border-2 border-white shadow-xl pointer-events-auto">
+            <div x-transition class="bg-black text-white px-6 py-3 font-black uppercase text-xs border-2 border-white shadow-xl pointer-events-auto">
                 Item added to cart
             </div>
         </template>
@@ -48,7 +56,6 @@
     <section class="p-4 border-b border-black space-y-4 sticky top-[74px] bg-white z-40">
         <input type="text" x-model="search" placeholder="SEARCH PRODUCTS..." 
                class="w-full border-2 border-black p-3 focus:outline-none placeholder-gray-400 font-bold uppercase text-sm">
-        
         <div class="flex gap-2 overflow-x-auto">
             <select x-model="filterStore" class="border-2 border-black p-2 text-[10px] font-black uppercase bg-white pr-8">
                 <option value="">ALL STORES</option>
@@ -73,13 +80,11 @@
                         <span class="absolute top-0 left-0 bg-black text-white text-[9px] px-2 py-1 font-bold uppercase">DISCOUNT</span>
                     </template>
                 </div>
-                
                 <div class="flex-grow">
                     <p class="text-[9px] font-bold text-gray-400 uppercase" x-text="product.store"></p>
                     <h3 class="font-black text-xs uppercase h-8 overflow-hidden" x-text="product.name"></h3>
                     <p class="text-lg font-black mt-1" x-text="'R' + product.price"></p>
                 </div>
-
                 <div class="mt-3 space-y-2">
                     <div>
                         <label class="text-[9px] font-black uppercase block mb-1">Quantity</label>
@@ -103,7 +108,6 @@
                 <h2 class="text-2xl font-black uppercase">YOUR CART</h2>
                 <button @click="cartOpen = false" class="text-4xl font-black leading-none">×</button>
             </div>
-
             <div class="flex-1 overflow-y-auto py-4">
                 <template x-if="cart.length === 0">
                     <p class="text-center italic text-gray-500 py-10 uppercase text-xs font-bold">Your cart is empty.</p>
@@ -121,7 +125,6 @@
                     </div>
                 </template>
             </div>
-
             <div class="border-t-4 border-black pt-4">
                 <div class="space-y-1 text-xs font-bold uppercase mb-4">
                     <div class="flex justify-between"><span>Subtotal</span><span x-text="'R' + subtotal()"></span></div>
@@ -130,7 +133,7 @@
                         <span>TOTAL</span><span x-text="'R' + (subtotal() + 3)"></span>
                     </div>
                 </div>
-                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black hover:bg-white hover:text-black transition uppercase italic">
+                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black hover:bg-white hover:text-black transition italic">
                     CONFIRM PURCHASE VIA WHATSAPP
                 </button>
             </div>
@@ -138,7 +141,7 @@
     </div>
 
     <div x-show="viewImage" class="fixed inset-0 z-[110] bg-black bg-opacity-95 flex items-center justify-center p-4" @click="viewImage = null">
-        <img :src="viewImage" class="max-w-full max-h-full border-4 border-white shadow-2xl">
+        <img :src="viewImage" class="max-w-full max-h-full border-4 border-white">
     </div>
 
     <footer class="bg-black text-white p-12 mt-auto border-t-4 border-black">
@@ -164,6 +167,7 @@
                 cartOpen: false,
                 viewImage: null,
                 showToast: false,
+                showInstallPrompt: false,
                 search: '',
                 filterStore: '',
                 onlySales: false,
@@ -172,9 +176,12 @@
                     { id: 1, name: "Sunflower Oil 2L", store: "Checkers", price: 75, discount: true, image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=500", orderQty: 1, link: "petalchain.co.za/p/oil" },
                     { id: 2, name: "Sliced White Bread", store: "Pick n Pay", price: 18, discount: false, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500", orderQty: 1, link: "petalchain.co.za/p/bread" },
                     { id: 3, name: "Fuji Apples 1.5kg", store: "Woolworths", price: 35, discount: true, image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=500", orderQty: 1, link: "petalchain.co.za/p/apples" },
-                    { id: 4, name: "Large Eggs 18pk", store: "Checkers", price: 58, discount: false, image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=500", orderQty: 1, link: "petalchain.co.za/p/eggs" },
-                    { id: 5, name: "Full Cream Milk 2L", store: "Spar", price: 39, discount: false, image: "https://images.unsplash.com/photo-1550583724-125581fe2f8a?w=500", orderQty: 1, link: "petalchain.co.za/p/milk" }
+                    { id: 4, name: "Large Eggs 18pk", store: "Checkers", price: 58, discount: false, image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=500", orderQty: 1, link: "petalchain.co.za/p/eggs" }
                 ],
+                init() {
+                    // Show install prompt after 3 seconds if first visit
+                    setTimeout(() => { this.showInstallPrompt = true; }, 3000);
+                },
                 filteredProducts() {
                     return this.products.filter(p => {
                         return p.name.toLowerCase().includes(this.search.toLowerCase()) &&
@@ -190,8 +197,6 @@
                         this.cart.push({ ...product, qty: parseInt(product.orderQty) });
                     }
                     product.orderQty = 1;
-                    
-                    // Show Notification
                     this.showToast = true;
                     setTimeout(() => { this.showToast = false; }, 2000);
                 },
@@ -203,30 +208,21 @@
                 },
                 checkout() {
                     if (this.cart.length === 0) return alert("Your cart is empty.");
-
                     if (navigator.geolocation) {
                         navigator.geolocation.getCurrentPosition((pos) => {
                             this.sendWhatsApp(pos.coords.latitude, pos.coords.longitude);
                         }, () => {
-                            alert("Location access denied.");
                             this.sendWhatsApp("Not provided", "Not provided");
                         });
                     }
                 },
                 sendWhatsApp(lat, lon) {
-                    let message = `*PETAL CHAIN - THE MARKET ORDER*%0A%0A`;
+                    let message = `*PETAL CHAIN ORDER*%0A%0A`;
                     this.cart.forEach(i => {
-                        message += `• *${i.name}*%0A  Quantity: ${i.qty}%0A  Store: ${i.store}%0A  Price: R${i.price * i.qty}%0A  Link: ${i.link}%0A%0A`;
+                        message += `• *${i.name}*%0A  Qty: ${i.qty}%0A  Store: ${i.store}%0A  Price: R${i.price * i.qty}%0A  Link: ${i.link}%0A%0A`;
                     });
-                    
-                    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
-                    
-                    message += `*Subtotal:* R${this.subtotal()}%0A`;
-                    message += `*Delivery Fee:* R3%0A`;
-                    message += `*TOTAL:* R${this.subtotal() + 3}%0A%0A`;
-                    message += `*GPS LOCATION*%0A`;
-                    message += `Maps Link: ${mapsUrl}`;
-                    
+                    const mapsUrl = `http://maps.google.com/?q=${lat},${lon}`;
+                    message += `*Subtotal:* R${this.subtotal()}%0A*Delivery:* R3%0A*TOTAL:* R${this.subtotal() + 3}%0A%0A*GPS:* ${mapsUrl}`;
                     window.open(`https://wa.me/27646575290?text=${message}`, '_blank');
                     this.cart = [];
                     this.cartOpen = false;
