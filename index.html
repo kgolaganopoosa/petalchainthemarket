@@ -11,6 +11,12 @@
         body { font-family: 'Inter', sans-serif; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         select { border-radius: 0; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; }
+        
+        /* Animation for notification */
+        .toast-enter { transform: translateY(100%); opacity: 0; }
+        .toast-enter-active { transform: translateY(0); opacity: 1; transition: all 0.3s ease-out; }
+        .toast-exit { transform: translateY(0); opacity: 1; }
+        .toast-exit-active { transform: translateY(100%); opacity: 0; transition: all 0.3s ease-in; }
     </style>
 </head>
 <body class="bg-white text-black min-h-screen flex flex-col" x-data="marketStore()" x-cloak>
@@ -20,14 +26,23 @@
             <div class="w-10 h-10 bg-black text-white flex items-center justify-center font-black rounded-sm italic border border-white">PC</div>
             <span class="font-black text-xl tracking-tighter uppercase">Petal Chain</span>
         </div>
-        <button @click="cartOpen = true" class="border-2 border-black px-4 py-1 font-bold hover:bg-black hover:text-white transition">
-            CART [<span x-text="cart.length"></span>]
+        <button @click="cartOpen = true" class="border-2 border-black px-4 py-1 font-bold hover:bg-black hover:text-white transition flex items-center gap-2">
+            CART [<span class="text-red-600" x-text="cart.length"></span>]
         </button>
     </nav>
 
     <div class="py-10 border-b border-black text-center px-4 bg-white">
         <h2 class="text-4xl font-black uppercase mb-1">The Market</h2>
         <p class="text-xs tracking-[0.2em] font-bold uppercase text-gray-500 italic">Add items to the cart for instant delivery.</p>
+    </div>
+
+    <div class="fixed bottom-10 left-0 right-0 z-[120] flex justify-center pointer-events-none">
+        <template x-if="showToast">
+            <div x-transition:enter="toast-enter-active" x-transition:leave="toast-exit-active" 
+                 class="bg-black text-white px-6 py-3 font-black uppercase text-xs tracking-widest border-2 border-white shadow-xl pointer-events-auto">
+                Item added to cart
+            </div>
+        </template>
     </div>
 
     <section class="p-4 border-b border-black space-y-4 sticky top-[74px] bg-white z-40">
@@ -52,7 +67,7 @@
     <main class="p-4 grid-2 flex-grow">
         <template x-for="product in filteredProducts()" :key="product.id">
             <div class="border-2 border-black flex flex-col p-2 bg-white">
-                <div class="relative cursor-pointer border-b border-black mb-2 overflow-hidden bg-gray-50" @click="viewImage = product.image">
+                <div class="relative cursor-pointer border-b border-black mb-2 overflow-hidden" @click="viewImage = product.image">
                     <img :src="product.image" class="w-full aspect-square object-cover transition duration-300 hover:scale-105">
                     <template x-if="product.discount">
                         <span class="absolute top-0 left-0 bg-black text-white text-[9px] px-2 py-1 font-bold uppercase">DISCOUNT</span>
@@ -82,7 +97,7 @@
         </template>
     </main>
 
-    <div x-show="cartOpen" class="fixed inset-0 z-[100] bg-black bg-opacity-80 flex justify-end">
+    <div x-show="cartOpen" class="fixed inset-0 z-[100] bg-black bg-opacity-80 flex justify-end" x-transition>
         <div class="bg-white w-full max-w-md h-full p-6 flex flex-col shadow-2xl" @click.away="cartOpen = false">
             <div class="flex justify-between items-center border-b-4 border-black pb-4">
                 <h2 class="text-2xl font-black uppercase">YOUR CART</h2>
@@ -115,7 +130,7 @@
                         <span>TOTAL</span><span x-text="'R' + (subtotal() + 3)"></span>
                     </div>
                 </div>
-                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black hover:bg-white hover:text-black transition flex items-center justify-center gap-2">
+                <button @click="checkout()" class="w-full bg-black text-white py-4 font-black text-sm uppercase border-2 border-black hover:bg-white hover:text-black transition uppercase italic">
                     CONFIRM PURCHASE VIA WHATSAPP
                 </button>
             </div>
@@ -123,20 +138,19 @@
     </div>
 
     <div x-show="viewImage" class="fixed inset-0 z-[110] bg-black bg-opacity-95 flex items-center justify-center p-4" @click="viewImage = null">
-        <img :src="viewImage" class="max-w-full max-h-full border-4 border-white">
-        <p class="absolute bottom-10 text-white font-bold uppercase tracking-widest text-[10px] underline cursor-pointer">Close Window</p>
+        <img :src="viewImage" class="max-w-full max-h-full border-4 border-white shadow-2xl">
     </div>
 
     <footer class="bg-black text-white p-12 mt-auto border-t-4 border-black">
-        <div class="flex flex-col items-center gap-6">
+        <div class="flex flex-col items-center gap-6 text-center">
             <div class="w-12 h-12 border-2 border-white flex items-center justify-center text-xl font-black italic">PC</div>
             <p class="font-black uppercase tracking-widest text-sm">Petal Chain - The Market</p>
-            <div class="grid grid-cols-2 gap-10 text-[10px] uppercase font-bold text-center opacity-80">
+            <div class="grid grid-cols-2 gap-10 text-[10px] uppercase font-bold opacity-80">
                 <div class="space-y-2">
                     <a href="#" class="block hover:underline">Privacy Policy</a>
                     <a href="#" class="block hover:underline">Terms & Conditions</a>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2 text-right">
                     <p>Email: market@petalchain.co.za</p>
                     <p>WhatsApp: 0646575290</p>
                 </div>
@@ -149,6 +163,7 @@
             return {
                 cartOpen: false,
                 viewImage: null,
+                showToast: false,
                 search: '',
                 filterStore: '',
                 onlySales: false,
@@ -158,8 +173,7 @@
                     { id: 2, name: "Sliced White Bread", store: "Pick n Pay", price: 18, discount: false, image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=500", orderQty: 1, link: "petalchain.co.za/p/bread" },
                     { id: 3, name: "Fuji Apples 1.5kg", store: "Woolworths", price: 35, discount: true, image: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=500", orderQty: 1, link: "petalchain.co.za/p/apples" },
                     { id: 4, name: "Large Eggs 18pk", store: "Checkers", price: 58, discount: false, image: "https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?w=500", orderQty: 1, link: "petalchain.co.za/p/eggs" },
-                    { id: 5, name: "Fresh Bananas 1kg", store: "Spar", price: 22, discount: false, image: "https://images.unsplash.com/photo-1571771894821-ad99026.jpg?w=500", orderQty: 1, link: "petalchain.co.za/p/banana" },
-                    { id: 6, name: "White Sugar 2kg", store: "Checkers", price: 42, discount: true, image: "https://images.unsplash.com/photo-1581448670542-a841263d9183?w=500", orderQty: 1, link: "petalchain.co.za/p/sugar" }
+                    { id: 5, name: "Full Cream Milk 2L", store: "Spar", price: 39, discount: false, image: "https://images.unsplash.com/photo-1550583724-125581fe2f8a?w=500", orderQty: 1, link: "petalchain.co.za/p/milk" }
                 ],
                 filteredProducts() {
                     return this.products.filter(p => {
@@ -176,7 +190,10 @@
                         this.cart.push({ ...product, qty: parseInt(product.orderQty) });
                     }
                     product.orderQty = 1;
-                    this.cartOpen = true;
+                    
+                    // Show Notification
+                    this.showToast = true;
+                    setTimeout(() => { this.showToast = false; }, 2000);
                 },
                 removeFromCart(id) {
                     this.cart = this.cart.filter(i => i.id !== id);
@@ -188,14 +205,12 @@
                     if (this.cart.length === 0) return alert("Your cart is empty.");
 
                     if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition((position) => {
-                            this.sendWhatsApp(position.coords.latitude, position.coords.longitude);
+                        navigator.geolocation.getCurrentPosition((pos) => {
+                            this.sendWhatsApp(pos.coords.latitude, pos.coords.longitude);
                         }, () => {
-                            alert("Location access denied. Please allow GPS access to confirm delivery location.");
+                            alert("Location access denied.");
                             this.sendWhatsApp("Not provided", "Not provided");
                         });
-                    } else {
-                        this.sendWhatsApp("Geolocation not supported", "Geolocation not supported");
                     }
                 },
                 sendWhatsApp(lat, lon) {
@@ -204,14 +219,12 @@
                         message += `• *${i.name}*%0A  Quantity: ${i.qty}%0A  Store: ${i.store}%0A  Price: R${i.price * i.qty}%0A  Link: ${i.link}%0A%0A`;
                     });
                     
-                    const mapsUrl = (lat !== "Not provided") ? `https://www.google.com/maps?q=${lat},${lon}` : "N/A";
+                    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
                     
                     message += `*Subtotal:* R${this.subtotal()}%0A`;
                     message += `*Delivery Fee:* R3%0A`;
-                    message += `*TOTAL PAYABLE:* R${this.subtotal() + 3}%0A%0A`;
+                    message += `*TOTAL:* R${this.subtotal() + 3}%0A%0A`;
                     message += `*GPS LOCATION*%0A`;
-                    message += `Latitude: ${lat}%0A`;
-                    message += `Longitude: ${lon}%0A`;
                     message += `Maps Link: ${mapsUrl}`;
                     
                     window.open(`https://wa.me/27646575290?text=${message}`, '_blank');
